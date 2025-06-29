@@ -11,7 +11,16 @@ import Menu from "./pages/Menu";
 import PizzaDetail from "./pages/PizzaDetail";
 import Cart from "./pages/Cart";
 import OrderTracking from "./pages/OrderTracking";
+import Favorites from "./pages/Favorites";
 import About from "./pages/About";
+import Team from "./pages/Team";
+import History from "./pages/History";
+import Careers from "./pages/Careers";
+import Locations from "./pages/Locations";
+import HowWeWork from "./pages/HowWeWork";
+import Reviews from "./pages/Reviews";
+import Contact from "./pages/Contact";
+import FAQ from "./pages/FAQ";
 import Promotions from "./pages/Promotions";
 import Delivery from "./pages/Delivery";
 import Contacts from "./pages/Contacts";
@@ -42,7 +51,16 @@ const App = () => (
                 <Route path="/pizza/:id" element={<PizzaDetail />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/order-tracking" element={<OrderTracking />} />
+                <Route path="/favorites" element={<Favorites />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/team" element={<Team />} />
+                <Route path="/history" element={<History />} />
+                <Route path="/careers" element={<Careers />} />
+                <Route path="/locations" element={<Locations />} />
+                <Route path="/how-we-work" element={<HowWeWork />} />
+                <Route path="/reviews" element={<Reviews />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/faq" element={<FAQ />} />
                 <Route path="/promotions" element={<Promotions />} />
                 <Route path="/delivery" element={<Delivery />} />
                 <Route path="/contacts" element={<Contacts />} />
