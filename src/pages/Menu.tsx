@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, SlidersHorizontal } from 'lucide-react';
+import { Search, Filter, SlidersHorizontal, Grid, List, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,9 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PizzaCard from '@/components/PizzaCard';
+import { Link } from 'react-router-dom';
 
 interface Pizza {
   _id: string;
@@ -39,6 +41,9 @@ const Menu = () => {
   const [priceRange, setPriceRange] = useState([0, 2000]);
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [minRating, setMinRating] = useState(0);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(12);
 
   // Расширенные категории
   const extendedCategories = [
@@ -62,6 +67,10 @@ const Menu = () => {
   useEffect(() => {
     applyFilters();
   }, [pizzas, selectedCategory, searchQuery, sortBy, priceRange, selectedIngredients, minRating]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredPizzas]);
 
   const fetchPizzas = async () => {
     try {
@@ -138,6 +147,8 @@ const Menu = () => {
           return b.rating - a.rating;
         case 'popular':
           return b.reviewCount - a.reviewCount;
+        case 'name-desc':
+          return b.name.localeCompare(a.name);
         default:
           return a.name.localeCompare(b.name);
       }
@@ -173,6 +184,12 @@ const Menu = () => {
     setMinRating(0);
   };
 
+  // Пагинация
+  const totalPages = Math.ceil(filteredPizzas.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPizzas = filteredPizzas.slice(startIndex, endIndex);
+
   const FilterPanel = () => (
     <div className="space-y-6">
       {/* Сортировка */}
@@ -183,7 +200,8 @@ const Menu = () => {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="name">По названию</SelectItem>
+            <SelectItem value="name">По названию (А-Я)</SelectItem>
+            <SelectItem value="name-desc">По названию (Я-А)</SelectItem>
             <SelectItem value="price-asc">По цене (возрастание)</SelectItem>
             <SelectItem value="price-desc">По цене (убывание)</SelectItem>
             <SelectItem value="rating">По рейтингу</SelectItem>
@@ -231,7 +249,7 @@ const Menu = () => {
       <div>
         <h3 className="font-semibold mb-3">Ингредиенты</h3>
         <div className="max-h-48 overflow-y-auto space-y-2">
-          {getAllIngredients().slice(0, 10).map((ingredient) => (
+          {getAllIngredients().slice(0, 15).map((ingredient) => (
             <div key={ingredient} className="flex items-center space-x-2">
               <Checkbox
                 id={ingredient}
@@ -252,6 +270,51 @@ const Menu = () => {
     </div>
   );
 
+  const PizzaListItem = ({ pizza }: { pizza: Pizza }) => (
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+      <div className="flex">
+        <div className="relative w-48 h-32">
+          <img
+            src={pizza.image}
+            alt={pizza.name}
+            className="w-full h-full object-cover"
+          />
+          <Badge className="absolute top-2 left-2 bg-red-600">
+            {pizza.category}
+          </Badge>
+        </div>
+        <div className="flex-1 p-4">
+          <div className="flex justify-between items-start mb-2">
+            <Link to={`/pizza/${pizza._id}`}>
+              <h3 className="text-lg font-semibold hover:text-red-600 transition-colors">
+                {pizza.name}
+              </h3>
+            </Link>
+            <div className="flex items-center space-x-1">
+              <span className="text-yellow-400">★</span>
+              <span className="text-sm text-gray-600">
+                {pizza.rating} ({pizza.reviewCount})
+              </span>
+            </div>
+          </div>
+          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+            {pizza.description}
+          </p>
+          <div className="flex justify-between items-center">
+            <div className="text-xl font-bold text-red-600">
+              от {Math.min(...pizza.sizes.map(s => s.price))} ₽
+            </div>
+            <Link to={`/pizza/${pizza._id}`}>
+              <Button size="sm" className="bg-red-600 hover:bg-red-700">
+                Подробнее
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -259,7 +322,7 @@ const Menu = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Заголовок */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Наше меню</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Каталог пиццы</h1>
           <p className="text-lg text-gray-600">
             Выберите свою любимую пиццу из нашего разнообразного меню
           </p>
@@ -276,6 +339,26 @@ const Menu = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
             />
+          </div>
+          
+          {/* Переключатель вида */}
+          <div className="flex border rounded-lg">
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+              className="rounded-r-none"
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="rounded-l-none"
+            >
+              <List className="h-4 w-4" />
+            </Button>
           </div>
           
           {/* Мобильные фильтры */}
@@ -335,7 +418,7 @@ const Menu = () => {
             {/* Информация о результатах */}
             <div className="flex justify-between items-center mb-6">
               <p className="text-gray-600">
-                Найдено {filteredPizzas.length} из {pizzas.length} пицц
+                Показано {startIndex + 1}-{Math.min(endIndex, filteredPizzas.length)} из {filteredPizzas.length} пицц
               </p>
               {(selectedCategory !== 'Все' || searchQuery || selectedIngredients.length > 0 || minRating > 0) && (
                 <div className="flex flex-wrap gap-2">
@@ -371,11 +454,70 @@ const Menu = () => {
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filteredPizzas.map((pizza) => (
-                  <PizzaCard key={pizza._id} pizza={pizza} />
-                ))}
-              </div>
+              <>
+                {/* Сетка или список */}
+                {viewMode === 'grid' ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {currentPizzas.map((pizza) => (
+                      <PizzaCard key={pizza._id} pizza={pizza} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {currentPizzas.map((pizza) => (
+                      <PizzaListItem key={pizza._id} pizza={pizza} />
+                    ))}
+                  </div>
+                )}
+
+                {/* Пагинация */}
+                {totalPages > 1 && (
+                  <div className="mt-8 flex justify-center">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                        
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          let pageNum;
+                          if (totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            pageNum = currentPage - 2 + i;
+                          }
+                          
+                          return (
+                            <PaginationItem key={pageNum}>
+                              <PaginationLink
+                                onClick={() => setCurrentPage(pageNum)}
+                                isActive={currentPage === pageNum}
+                                className="cursor-pointer"
+                              >
+                                {pageNum}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        })}
+                        
+                        <PaginationItem>
+                          <PaginationNext 
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

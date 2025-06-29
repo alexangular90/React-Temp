@@ -7,6 +7,7 @@ import { CartProvider } from "@/contexts/CartContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import Index from "./pages/Index";
 import Menu from "./pages/Menu";
+import PizzaDetail from "./pages/PizzaDetail";
 import Cart from "./pages/Cart";
 import OrderTracking from "./pages/OrderTracking";
 import About from "./pages/About";
@@ -34,6 +35,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/menu" element={<Menu />} />
+              <Route path="/pizza/:id" element={<PizzaDetail />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/order-tracking" element={<OrderTracking />} />
               <Route path="/about" element={<About />} />

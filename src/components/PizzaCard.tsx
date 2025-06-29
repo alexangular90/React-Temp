@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 
 interface Pizza {
   _id: string;
@@ -95,11 +96,13 @@ const PizzaCard = ({ pizza }: PizzaCardProps) => {
     <>
       <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
         <div className="relative">
-          <img
-            src={pizza.image}
-            alt={pizza.name}
-            className="w-full h-48 object-cover"
-          />
+          <Link to={`/pizza/${pizza._id}`}>
+            <img
+              src={pizza.image}
+              alt={pizza.name}
+              className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300"
+            />
+          </Link>
           <Badge className="absolute top-2 left-2 bg-red-600">
             {pizza.category}
           </Badge>
@@ -115,7 +118,11 @@ const PizzaCard = ({ pizza }: PizzaCardProps) => {
         
         <CardContent className="p-4 flex-1 flex flex-col">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold">{pizza.name}</h3>
+            <Link to={`/pizza/${pizza._id}`}>
+              <h3 className="text-lg font-semibold hover:text-red-600 transition-colors">
+                {pizza.name}
+              </h3>
+            </Link>
             <div className="flex items-center space-x-1">
               <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
               <span className="text-sm text-gray-600">
@@ -164,13 +171,14 @@ const PizzaCard = ({ pizza }: PizzaCardProps) => {
               </span>
             </div>
             <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setShowDetails(true)}
-              >
-                Выбрать
-              </Button>
+              <Link to={`/pizza/${pizza._id}`}>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                >
+                  Подробнее
+                </Button>
+              </Link>
               <Button 
                 onClick={quickAddToCart} 
                 size="sm"
@@ -320,14 +328,20 @@ const PizzaCard = ({ pizza }: PizzaCardProps) => {
                   {pizza.sizes[selectedSize].size} • {selectedDough} тесто • {selectedCrust} край
                 </div>
               </div>
-              <Button 
-                onClick={handleAddToCart}
-                size="lg"
-                className="bg-red-600 hover:bg-red-700"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Добавить в корзину
-              </Button>
+              <div className="flex space-x-2">
+                <Link to={`/pizza/${pizza._id}`}>
+                  <Button variant="outline">
+                    Подробнее
+                  </Button>
+                </Link>
+                <Button 
+                  onClick={handleAddToCart}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  В корзину
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>
