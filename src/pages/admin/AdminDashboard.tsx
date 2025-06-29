@@ -5,10 +5,13 @@ import {
   ShoppingCart, 
   Pizza,
   DollarSign,
-  Clock
+  Clock,
+  RefreshCw
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface DashboardStats {
   totalOrders: number;
@@ -17,6 +20,7 @@ interface DashboardStats {
   totalPizzas: number;
   recentOrders: any[];
   popularPizzas: any[];
+  kpi: any;
 }
 
 const AdminDashboard = () => {
@@ -26,7 +30,8 @@ const AdminDashboard = () => {
     totalUsers: 0,
     totalPizzas: 0,
     recentOrders: [],
-    popularPizzas: []
+    popularPizzas: [],
+    kpi: null
   });
   const [loading, setLoading] = useState(true);
 
@@ -35,6 +40,7 @@ const AdminDashboard = () => {
   }, []);
 
   const fetchDashboardData = async () => {
+    setLoading(true);
     try {
       // Получаем статистику заказов
       const ordersResponse = await fetch('http://localhost:5000/api/orders');
@@ -43,6 +49,14 @@ const AdminDashboard = () => {
       // Получаем пиццы
       const pizzasResponse = await fetch('http://localhost:5000/api/pizzas');
       const pizzas = await pizzasResponse.json();
+
+      // Получаем KPI данные
+      const kpiResponse = await fetch('http://localhost:5000/api/analytics/kpi?period=7days');
+      const kpiData = await kpiResponse.json();
+
+      // Получаем популярные пиццы
+      const popularResponse = await fetch('http://localhost:5000/api/analytics/popular-pizzas?period=30days');
+      const popularPizzas = await popularResponse.json();
 
       const totalRevenue = orders.reduce((sum: number, order: any) => sum + order.totalAmount, 0);
       const recentOrders = orders.slice(0, 5);
@@ -53,10 +67,12 @@ const AdminDashboard = () => {
         totalUsers: 0, // Пока нет API для пользователей
         totalPizzas: pizzas.length,
         recentOrders,
-        popularPizzas: pizzas.slice(0, 5)
+        popularPizzas: popularPizzas.slice(0, 5),
+        kpi: kpiData
       });
     } catch (error) {
       console.error('Ошибка при загрузке данных дашборда:', error);
+      toast.error('Ошибка при загрузке данных');
     } finally {
       setLoading(false);
     }
@@ -74,6 +90,19 @@ const AdminDashboard = () => {
     }
   };
 
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('ru-RU', {
+      style: 'currency',
+      currency: 'RUB',
+      minimumFractionDigits: 0
+    }).format(value);
+  };
+
+  const formatChange = (change: number) => {
+    const sign = change >= 0 ? '+' : '';
+    return `${sign}${change.toFixed(1)}%`;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -84,9 +113,15 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Панель управления</h1>
-        <p className="text-muted-foreground">Обзор деятельности пиццерии</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Панель управления</h1>
+          <p className="text-muted-foreground">Обзор деятельности пиццерии</p>
+        </div>
+        <Button variant="outline" onClick={fetchDashboardData} disabled={loading}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          Обновить
+        </Button>
       </div>
 
       {/* Статистические карточки */}
@@ -98,10 +133,12 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalOrders}</div>
-            <p className="text-xs text-muted-foreground">
-              <TrendingUp className="h-3 w-3 inline mr-1" />
-              +12% с прошлого месяца
-            </p>
+            {stats.kpi && (
+              <p className="text-xs text-muted-foreground">
+                <TrendingUp className="h-3 w-3 inline mr-1" />
+                {formatChange(stats.kpi.orders.change)} за период
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -111,11 +148,13 @@ const AdminDashboard = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalRevenue.toLocaleString()} ₽</div>
-            <p className="text-xs text-muted-foreground">
-              <TrendingUp className="h-3 w-3 inline mr-1" />
-              +8% с прошлого месяца
-            </p>
+            <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
+            {stats.kpi && (
+              <p className="text-xs text-muted-foreground">
+                <TrendingUp className="h-3 w-3 inline mr-1" />
+                {formatChange(stats.kpi.revenue.change)} за период
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -168,7 +207,7 @@ const AdminDashboard = () => {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold">{order.totalAmount} ₽</p>
+                    <p className="font-bold">{formatCurrency(order.totalAmount)}</p>
                     <Badge className={getStatusColor(order.status)}>
                       {order.status}
                     </Badge>
@@ -189,25 +228,21 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {stats.popularPizzas.map((pizza) => (
+              {stats.popularPizzas.map((pizza, index) => (
                 <div key={pizza._id} className="flex items-center space-x-3 p-3 border rounded-lg">
-                  <img
-                    src={pizza.image}
-                    alt={pizza.name}
-                    className="w-12 h-12 object-cover rounded"
-                  />
+                  <div className="text-lg font-bold text-gray-400">#{index + 1}</div>
                   <div className="flex-1">
                     <p className="font-medium">{pizza.name}</p>
                     <p className="text-sm text-muted-foreground">{pizza.category}</p>
                     <div className="flex items-center space-x-1">
-                      <span className="text-sm">⭐ {pizza.rating}</span>
+                      <span className="text-sm">{pizza.orders} заказов</span>
                       <span className="text-sm text-muted-foreground">
-                        ({pizza.reviewCount} отзывов)
+                        ({pizza.percentage}%)
                       </span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold">от {pizza.sizes[0]?.price} ₽</p>
+                    <p className="font-bold">{formatCurrency(pizza.revenue)}</p>
                   </div>
                 </div>
               ))}
