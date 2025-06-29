@@ -13,6 +13,10 @@ const Header = () => {
   const navigation = [
     { name: 'Главная', href: '/' },
     { name: 'Меню', href: '/menu' },
+    { name: 'Акции', href: '/promotions' },
+    { name: 'Доставка', href: '/delivery' },
+    { name: 'О нас', href: '/about' },
+    { name: 'Контакты', href: '/contacts' },
     { name: 'Отследить заказ', href: '/order-tracking' },
   ];
 
@@ -29,7 +33,7 @@ const Header = () => {
           </Link>
 
           {/* Навигация для десктопа */}
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden lg:flex space-x-6">
             {navigation.map((item) => (
               <Link
                 key={item.name}
@@ -60,7 +64,7 @@ const Header = () => {
             </Link>
 
             {/* Мобильное меню */}
-            <div className="md:hidden">
+            <div className="lg:hidden">
               <Button
                 variant="ghost"
                 size="sm"
@@ -74,7 +78,7 @@ const Header = () => {
 
         {/* Мобильная навигация */}
         {isMenuOpen && (
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t">
               {navigation.map((item) => (
                 <Link

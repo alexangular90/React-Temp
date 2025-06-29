@@ -9,6 +9,10 @@ import Index from "./pages/Index";
 import Menu from "./pages/Menu";
 import Cart from "./pages/Cart";
 import OrderTracking from "./pages/OrderTracking";
+import About from "./pages/About";
+import Promotions from "./pages/Promotions";
+import Delivery from "./pages/Delivery";
+import Contacts from "./pages/Contacts";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminPizzas from "./pages/admin/AdminPizzas";
@@ -32,6 +36,10 @@ const App = () => (
               <Route path="/menu" element={<Menu />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/order-tracking" element={<OrderTracking />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/promotions" element={<Promotions />} />
+              <Route path="/delivery" element={<Delivery />} />
+              <Route path="/contacts" element={<Contacts />} />
               
               {/* Админ панель */}
               <Route path="/admin" element={<AdminLayout />}>
